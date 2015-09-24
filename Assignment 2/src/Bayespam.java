@@ -1,5 +1,11 @@
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.StringTokenizer;
 
 public class Bayespam
 {
@@ -82,6 +88,22 @@ public class Bayespam
                                 " in spam: "    + counter.counter_spam);
         }
     }
+    
+    private static String toAlpha(String s)
+    ///Filters out all non-letters and lowercases it.
+    {
+    	StringBuffer alpha = new StringBuffer();
+    	int idx;
+    	for (idx = 0; idx < s.length(); ++idx)
+    	{
+    		char c = s.charAt(idx);
+    		if (Character.isLetter(c))
+    		{
+    			alpha.append(Character.toLowerCase(c));
+    		}
+    	}
+    	return new String(alpha);
+    }
 
 
     // Read the words from messages and add them to your vocabulary. The boolean type determines whether the messages are regular or not  
@@ -106,13 +128,13 @@ public class Bayespam
             while ((line = in.readLine()) != null)                      // read a line
             {
                 StringTokenizer st = new StringTokenizer(line);         // parse it into words
-        
-                while (st.hasMoreTokens())                  // while there are stille words left..
+
+                while (st.hasMoreTokens())                  // while there are still words left..
                 {
 					String next = st.nextToken();
 					if (next.length() >= 4)				/// and they have 4 or more characters
 					{
-						addWord(st.nextToken(), type);                  // add them to the vocabulary
+						addWord(toAlpha(next), type);        // add them to the vocabulary
 					}
 				}
             }
