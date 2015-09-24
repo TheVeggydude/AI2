@@ -109,8 +109,12 @@ public class Bayespam
         
                 while (st.hasMoreTokens())                  // while there are stille words left..
                 {
-                    addWord(st.nextToken(), type);                  // add them to the vocabulary
-                }
+					String next = st.nextToken();
+					if (next.length() >= 4)				/// and they have 4 or more characters
+					{
+						addWord(st.nextToken(), type);                  // add them to the vocabulary
+					}
+				}
             }
 
             in.close();
