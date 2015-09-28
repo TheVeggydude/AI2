@@ -49,7 +49,7 @@ public class Bayespam
     private static int normalWordCnt;
     
     ///The tweaker constant declared in section 2.2 is here for tweaking
-    private static final double EPSILON = 0.0000000000000000001;
+    private static final double EPSILON = 1;
     
     // Add a word to the vocabulary
     private static void addWord(String word, MessageType type)
@@ -215,20 +215,10 @@ public class Bayespam
     	return Math.log(zeroSafeguard(counter.counter_regular / getNormalWordCount()));
     }
     
-    private static double getNormalLikelihood(int counterRegular)
-    { /// you can also call this method with the counter already provided
-    	return Math.log(zeroSafeguard(counterRegular / getNormalWordCount()));
-    }
-    
     private static double getSpamLikelihood(String word)
     {
     	Multiple_Counter counter  = vocab.get(word);
     	return Math.log(zeroSafeguard(counter.counter_spam / getSpamWordCount()));
-    }
-    
-    private static double getSpamLikelihood(int counterSpam)
-    {
-    	return Math.log(zeroSafeguard(counterSpam / getSpamWordCount()));
     }
     
     private static double zeroSafeguard(double d)
