@@ -8,9 +8,8 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
-public class Bayespam
-{
-    // This defines the two types of messages we have.
+public class BigramBayespam {
+	// This defines the two types of messages we have.
     static enum MessageType
     {
         NORMAL, SPAM
@@ -49,7 +48,11 @@ public class Bayespam
     private static int normalWordCnt;
     
     ///The tweaker constant declared in section 2.2 is here for tweaking
-    private static final double EPSILON = 0.0000000000000000001;
+    private static final double EPSILON = 0.0001;
+    
+    ///The two parameters suggested by the assignment that cut off bigrams with too short length and too few occurences.
+    private static final int MIN_BIGRAM_LENGTH = 9;   ///NOTE: includes a space!
+    private static final int MIN_BIGRAM_OCCURANCE = 2;  ///Any bigram occurring (across normal AND spam!) less will get pruned. 
     
     // Add a word to the vocabulary
     private static void addWord(String word, MessageType type)
@@ -145,6 +148,7 @@ public class Bayespam
             FileInputStream i_s = new FileInputStream( messages[i] );
             BufferedReader in = new BufferedReader(new InputStreamReader(i_s));
             String line;
+            String old = ""; /// old represents the previous token, is initialised to the first
             
             while ((line = in.readLine()) != null)                      // read a line
             {
@@ -152,11 +156,15 @@ public class Bayespam
 
                 while (st.hasMoreTokens())                  // while there are still words left..
                 {
+                	if (old == "")
+                		old = toAlpha(st.nextToken());		///make sure to grab the first token (in all lines) as a different case!
+                	
 					String next = toAlpha(st.nextToken());
-					if (next.length() >= 4)				/// and they have 4 or more characters
-					{
-						addWord(next, type);        // add them to the vocabulary
+					if (old.length()+next.length() >= MIN_BIGRAM_LENGTH-1)	/// and both words have 4 or more characters
+					{														/// The -1 corrects for the space.
+						addWord(old + " " + next, type);        // add them to the vocabulary
 					}										/// converted and all
+					old = next;
 				}
             }
 
@@ -240,41 +248,6 @@ public class Bayespam
     }
     
 /// ----------------------- Section 3 ------------------------
-/// ----------------------- 3.1 ----------------------
-   
-    private static MessageType classifyMsg(File f) throws IOException
-    {
-    	FileInputStream i_s = new FileInputStream( f );
-        BufferedReader in = new BufferedReader(new InputStreamReader(i_s));
-        String line;
-        
-        double pNormal = getPriorNormal();
-        double pSpam = getPriorSpam();
-        
-        while ((line = in.readLine()) != null)                      // read a line
-        {
-            StringTokenizer st = new StringTokenizer(line);         // parse it into words
-
-            while (st.hasMoreTokens())                  // while there are still words left..
-            {
-				String next = toAlpha(st.nextToken());
-				if (next.length() >= 4 && vocab.containsKey(next))	/// and they have 4 or more characters
-				{													/// and the word is in the vocabulary
-					pNormal += getNormalLikelihood(next);
-					pSpam += getSpamLikelihood(next);
-				}
-			}
-        }
-        
-        in.close();
-        
-        ///System.out.println("P(normal): " + pNormal + " | P(spam): " + pSpam);
-        
-        if (pNormal > pSpam)
-        	return MessageType.NORMAL;
-        else
-        	return MessageType.SPAM;
-    }
     
 /// ---------------- 3.2 ---------------------
     
@@ -319,6 +292,61 @@ public class Bayespam
     			+ "       | Spam\t| "+ (spamTotal-spamCorrect) +"\t | "+ spamCorrect +"\n");
     }
     
+/// ---------------- Section 4 ------------------------
+    
+    private static void pruneVocab() /// Now that all bigrams have been counted, remove those that don't occur enough
+    {
+    	Enumeration<String> keys = vocab.keys();
+    	while (keys.hasMoreElements())
+    	{
+    		String k = keys.nextElement();
+    		Multiple_Counter c = vocab.get(k);
+    		if (c.counter_regular + c.counter_spam < MIN_BIGRAM_OCCURANCE)
+    			vocab.remove(k);
+    	}
+    }
+    
+    private static MessageType classifyMsg(File f) throws IOException
+    {
+    	FileInputStream i_s = new FileInputStream( f );
+        BufferedReader in = new BufferedReader(new InputStreamReader(i_s));
+        String line;
+        String old = ""; /// old represents the previous token, is initialised to the first
+        
+        double pNormal = getPriorNormal();
+        double pSpam = getPriorSpam();
+        
+        while ((line = in.readLine()) != null)                      // read a line
+        {
+            StringTokenizer st = new StringTokenizer(line);         // parse it into words
+            
+            if (st.hasMoreTokens())
+            	old = toAlpha(st.nextToken());	/// old represents the previous token, is initialised to the first
+
+            while (st.hasMoreTokens())                  // while there are still words left..
+            {
+            	if (old == "")
+            		old = toAlpha(st.nextToken());
+            	
+				String next = toAlpha(st.nextToken());
+				String cat = old + " " + next;			///the concatenated strings.
+				if (cat.length() >= MIN_BIGRAM_LENGTH && vocab.containsKey(cat))	/// and both words have 4 or more characters
+				{														/// The -1 corrects for the space.
+					pNormal += getNormalLikelihood(cat);
+					pSpam += getSpamLikelihood(cat);
+				}										
+				old = next;
+			}
+        }
+        
+        in.close();
+        
+        if (pNormal > pSpam)
+        	return MessageType.NORMAL;
+        else
+        	return MessageType.SPAM;
+    }
+    
 /// ---------------- MAIN ---------------------------
     
     public static void main(String[] args)
@@ -340,6 +368,9 @@ public class Bayespam
         // Read the e-mail messages
         readMessages(MessageType.NORMAL);
         readMessages(MessageType.SPAM);
+        
+        ///Cut out bigrams that do not occur enough
+        pruneVocab();
 
         // Print out the hash table
         printVocab();
