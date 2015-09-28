@@ -49,7 +49,7 @@ public class Bayespam
     private static int normalWordCnt;
     
     ///The tweaker constant declared in section 2.2 is here for tweaking
-    private static final double EPSILON = 3;
+    private static final double EPSILON = 0.0000000000000000001;
     
     // Add a word to the vocabulary
     private static void addWord(String word, MessageType type)
