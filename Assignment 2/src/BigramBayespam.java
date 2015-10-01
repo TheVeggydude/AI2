@@ -49,7 +49,7 @@ public class BigramBayespam {
     
     ///The tweaker constant declared in section 2.2 is here for tweaking
 
-    private static final double EPSILON = 0.0001;
+    private static final double EPSILON = 1;
     
     ///The two parameters suggested by the assignment that cut off bigrams with too short length and too few occurences.
     private static final int MIN_BIGRAM_LENGTH = 9;   ///NOTE: includes a space!
