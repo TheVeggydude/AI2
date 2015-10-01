@@ -224,20 +224,10 @@ public class BigramBayespam {
     	return Math.log(zeroSafeguard(counter.counter_regular / getNormalWordCount()));
     }
     
-    private static double getNormalLikelihood(int counterRegular)
-    { /// you can also call this method with the counter already provided
-    	return Math.log(zeroSafeguard(counterRegular / getNormalWordCount()));
-    }
-    
     private static double getSpamLikelihood(String word)
     {
     	Multiple_Counter counter  = vocab.get(word);
     	return Math.log(zeroSafeguard(counter.counter_spam / getSpamWordCount()));
-    }
-    
-    private static double getSpamLikelihood(int counterSpam)
-    {
-    	return Math.log(zeroSafeguard(counterSpam / getSpamWordCount()));
     }
     
     private static double zeroSafeguard(double d)
