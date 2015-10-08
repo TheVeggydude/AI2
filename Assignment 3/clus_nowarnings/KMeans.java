@@ -49,6 +49,9 @@ public class KMeans extends ClusteringAlgorithm
 		this.dim = dim;
 		prefetchThreshold = 0.5;
 		
+		this.hitrate = 0.0;
+		this.accuracy = 0.0;
+		
 		// Here k new cluster are initialized
 		clusters = new Cluster[k];
 		for (int ic = 0; ic < k; ic++)
@@ -207,26 +210,45 @@ public class KMeans extends ClusteringAlgorithm
 
 
 	public boolean test()
-	{
-		// iterate along all clients. Assumption: the same clients are in the same order as in the testData
-		// for each client find the cluster of which it is a member
-		// get the actual testData (the vector) of this client
-		// iterate along all dimensions
-		// and count prefetched htmls
-		// count number of hits
-		// count number of requests
-		// set the global variables hitrate and accuracy to their appropriate value
+	{	
+		int prefetched = 0;
+		int requests = 0;
+		int hits = 0;
 		
-		///for every client
+		// iterate along all clients. Assumption: the same clients are in the same order as in the testData
 		for(int clients = 0; clients < testData.size(); clients++){
-			float[] client = testData.elementAt(clients);
 			
+			// get the actual testData (the vector) of this client
+			float[] currentClient = testData.elementAt(clients);
+			
+			// for each client find the cluster of which it is a member
 			for(int cluster = 0; cluster < this.k; cluster++){
-				if(this.clusters[cluster].currentMembers.contains(client)){
+				Cluster currentCluster = this.clusters[cluster];
+				if(currentCluster.currentMembers.contains(clients)){
 					
+					// iterate along all dimensions
+					for(int url = 0; url < this.dim; url++){
+						
+						// and count prefetched htmls
+						prefetched = currentCluster.prototype[url] >= this.prefetchThreshold ? prefetched+1 : prefetched ; 
+						
+						// count number of hits
+						hits = (currentCluster.prototype[url] >= this.prefetchThreshold) && (currentClient[url] == 1.0) ? hits+1 : hits ;
+
+						// count number of requests
+						requests = currentClient[url] == 1.0 ? requests+1 : requests ;
+						
+					}
 				}
 			}
 		}
+		
+		// set the global variables hitrate and accuracy to their appropriate value
+		
+		System.out.println("Hits: " + hits + ", requests: " + requests +", prefetched: " + prefetched);
+		
+		this.hitrate = hits/(double)requests;
+		this.accuracy = hits/(double)prefetched;
 		
 		return true;
 	}
