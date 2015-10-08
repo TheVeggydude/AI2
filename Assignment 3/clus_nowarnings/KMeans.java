@@ -24,8 +24,10 @@ public class KMeans extends ClusteringAlgorithm
 		Set<Integer> currentMembers;
 		Set<Integer> previousMembers;
 		  
-		public Cluster()
+		public Cluster(int dim)
 		{
+			prototype = new float[dim];
+			
 			currentMembers = new HashSet<Integer>();
 			previousMembers = new HashSet<Integer>();
 		}
@@ -50,19 +52,159 @@ public class KMeans extends ClusteringAlgorithm
 		// Here k new cluster are initialized
 		clusters = new Cluster[k];
 		for (int ic = 0; ic < k; ic++)
-			clusters[ic] = new Cluster();
+			clusters[ic] = new Cluster(dim);
 	}
 
 
 	public boolean train()
 	{
 	 	//implement k-means algorithm here:
-		// Step 1: Select an initial random partioning with k clusters
+		// Step 1: Select an initial random partioning with k clusters *check*
 		// Step 2: Generate a new partition by assigning each datapoint to its closest cluster center
 		// Step 3: recalculate cluster centers
 		// Step 4: repeat until clustermembership stabilizes
+		
+		System.out.println("RandomPartition");
+		this.randomPartition(); ///step 1
+		
+		while(!this.sameProtypes()){ /// step 4
+			System.out.println("Partition");
+			this.partition(); ///step 2
+			
+			System.out.println("CalculatingPrototypes");
+			this.calculateProtoypes(); ///step 3
+			
+		}
+		
 		return false;
 	}
+
+	private boolean sameProtypes() {
+		///Check if the current and previous members of all the clusters are the same.
+		
+		///For each of the clusters
+		for(int cluster = 0; cluster < this.k; cluster++){	
+			
+			Set<Integer> current = this.clusters[cluster].currentMembers;
+			Set<Integer> previous = this.clusters[cluster].previousMembers;
+			
+			///Check if the two sets are equal
+			if(!current.equals(previous)){
+				return false;
+			}
+			
+		}
+		
+		return true;
+	}
+
+	
+	private void partition() {
+		///Repartition the data over the clusters according to Euclidian distance
+		
+		this.newGeneration();
+		
+		Iterator<float[]> users = trainData.iterator();
+		
+		///For every user
+		while(users.hasNext()){
+			float[] currentUser = users.next();
+			double minDistance = Double.MAX_VALUE;
+			int chosenCluster = 0;
+			
+			///Check the distance for every combination with a cluster
+			for(int cluster = 0; cluster < this.k; cluster++){
+				Cluster currentCluster = this.clusters[cluster];
+				
+				double distance = this.euclidianDist(currentUser, currentCluster.prototype);
+				
+				if(distance < minDistance){
+					minDistance = distance;
+					chosenCluster = cluster;
+				}
+			}
+			
+			///Now add the user to the best cluster
+			this.clusters[chosenCluster].currentMembers.add(trainData.indexOf(currentUser));
+			
+		}
+		
+	}
+
+	
+	private double euclidianDist(float[] currentUser, float[] prototype) {
+		///Calculate the Euclidian distance between the member's array and the prototype
+		
+		double result = 0;
+		
+		for(int i= 0; i < this.dim; i++){
+			result += Math.pow((currentUser[i] - prototype[i]), 2);
+		}
+		
+		result = Math.sqrt(result);
+		
+		return result;
+	}
+
+
+	private void newGeneration() {
+		///Lets the current members become the previous members
+		///and creates a new set of current members.
+		
+		for(int i = 0; i < this.k; i++){
+			this.clusters[i].previousMembers = this.clusters[i].currentMembers;
+			this.clusters[i].currentMembers = new HashSet<Integer>();
+		}
+		
+	}
+
+
+	private void randomPartition() {
+		/// Select a random partitioning of the clusters
+		
+		Iterator<float[]> user = trainData.iterator();
+		Random randomizer = new Random();
+		
+		while(user.hasNext()){
+			float[] urls = user.next();
+			
+			///Select to which cluster this member will be assigned
+			
+			int selectedCluster = randomizer.nextInt(k);
+			this.clusters[selectedCluster].currentMembers.add(trainData.indexOf(urls));
+			
+		}
+		
+		this.calculateProtoypes();
+		
+	}
+
+
+	private void calculateProtoypes() {
+		/// Calculate the prototypes of each of the clusters
+		
+		///Loop over clusters
+		for(int i = 0; i < this.k; i++){
+			Cluster cluster = this.clusters[i];
+			
+			///Loop over urls
+			for(int url = 0; url < this.dim; url++){
+				cluster.prototype[url] = 0.0f;
+				Iterator<Integer> user = cluster.currentMembers.iterator();
+				
+				///Loop over members
+				while(user.hasNext()){
+					int x = user.next();
+					float[] currentUser = trainData.get(x);
+					cluster.prototype[url] += currentUser[url];
+					
+				}
+				
+				cluster.prototype[url] /= cluster.currentMembers.size();
+			}
+		}
+	}
+
 
 	public boolean test()
 	{
@@ -74,6 +216,18 @@ public class KMeans extends ClusteringAlgorithm
 		// count number of hits
 		// count number of requests
 		// set the global variables hitrate and accuracy to their appropriate value
+		
+		///for every client
+		for(int clients = 0; clients < testData.size(); clients++){
+			float[] client = testData.elementAt(clients);
+			
+			for(int cluster = 0; cluster < this.k; cluster++){
+				if(this.clusters[cluster].currentMembers.contains(client)){
+					
+				}
+			}
+		}
+		
 		return true;
 	}
 
