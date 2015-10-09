@@ -102,6 +102,7 @@ public class Kohonen extends ClusteringAlgorithm
 	
 	private ArrayList<Cluster> findNeighbors(Cluster c, double r){
 		///Step 4: find all clusters (output) in the neighborhood (r) of the BMU (c)
+        ///Awaiting TA reply on whether this is correct method!
 		ArrayList<Cluster> al = new ArrayList<Cluster>();
 		float[] pt = c.prototype;
 		for (int i1 = 0; i1 < n; ++i1){
@@ -118,6 +119,7 @@ public class Kohonen extends ClusteringAlgorithm
 	
 	private void updateNeighbors(ArrayList<Cluster> nb, float[] inpVec, float eta){
 		//Step 5: Update all neighbors (nb) to be more like the input vector (inpVec)
+        ///Awaiting TA reply on whether this is correct method!
 		Iterator<Cluster> clusters = nb.iterator();
 		
 		while (clusters.hasNext()){
