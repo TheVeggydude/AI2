@@ -1,4 +1,9 @@
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Random;
+import java.util.Set;
+import java.util.Vector;
 
 public class Kohonen extends ClusteringAlgorithm
 {
@@ -58,20 +63,95 @@ public class Kohonen extends ClusteringAlgorithm
 			for (int i2 = 0; i2 < n; i2++) {
 				clusters[i][i2] = new Cluster();
 				clusters[i][i2].prototype = new float[dim];
+				for (int idx = 0; idx < dim; ++idx){
+					clusters[i][i2].prototype[idx] = rnd.nextFloat(); ///Step 1
+				}
 			}
 		}
 	}
-
+	
+	private double euclidianDist(float[] currentUser, float[] prototype) {
+		///Calculate the Euclidian distance between the member's array and the prototype
+		
+		double result = 0;
+		
+		for(int i= 0; i < this.dim; i++){
+			result += Math.pow((currentUser[i] - prototype[i]), 2);
+		}
+		
+		result = Math.sqrt(result);
+		
+		return result;
+	}
+	
+	private Cluster findBMU(float[] us){
+		///Step 3: find the cluster closest to the input vector (us) in terms of euclidian distance
+		double min = Double.MAX_VALUE;
+		Cluster best = new Cluster();
+		for (int i1 = 0; i1 < n; ++i1){
+			for (int i2 = 0; i2 < n; ++i2){ ///Loop over all clusters
+				double dist = euclidianDist(us, clusters[i1][i2].prototype);
+				if (dist < min){ ///Select closest
+					min = dist;
+					best = clusters[i1][i2];
+				}
+			}
+		}
+		return best;
+	}
+	
+	private ArrayList<Cluster> findNeighbors(Cluster c, double r){
+		///Step 4: find all clusters (output) in the neighborhood (r) of the BMU (c)
+		ArrayList<Cluster> al = new ArrayList<Cluster>();
+		float[] pt = c.prototype;
+		for (int i1 = 0; i1 < n; ++i1){
+			for (int i2 = 0; i2 < n; ++i2){ ///Loop over all clusters
+				double dist = euclidianDist(pt, clusters[i1][i2].prototype);
+				if (dist <= r){
+					al.add(clusters[i1][i2]);
+				}
+			}
+		}
+		
+		return al;
+	}
+	
+	private void updateNeighbors(ArrayList<Cluster> nb, float[] inpVec, float eta){
+		//Step 5: Update all neighbors (nb) to be more like the input vector (inpVec)
+		Iterator<Cluster> clusters = nb.iterator();
+		
+		while (clusters.hasNext()){
+			Cluster c = clusters.next();
+			for (int i = 0; i < dim; ++i){
+				c.prototype[i] = (1 - eta)*(c.prototype[i]+(eta*inpVec[i]));
+			}
+		}
+	}
 	
 	public boolean train()
 	{
-		// Step 1: initialize map with random vectors (A good place to do this, is in the initialisation of the clusters)
+		// Step 1: initialize map with random vectors (A good place to do this, is in the initialisation of the clusters) -- DONE
 		// Repeat 'epochs' times:
 			// Step 2: Calculate the squareSize and the learningRate, these decrease lineary with the number of epochs.
 			// Step 3: Every input vector is presented to the map (always in the same order)
 			// For each vector its Best Matching Unit is found, and :
 				// Step 4: All nodes within the neighbourhood of the BMU are changed, you don't have to use distance relative learning.
 		// Since training kohonen maps can take quite a while, presenting the user with a progress bar would be nice
+		
+		Iterator<float[]> users = trainData.iterator();
+		
+		for (int e =0; e < epochs; ++e){///Step 2 and 6
+			///Loop done e times
+			float r = (n/2)*(1-(e/epochs)); ///Calculate r every loop as e changes, within the loop would be inefficient
+			float eta = 0.8f*(1-(e/epochs)); ///Same for eta.
+			while (users.hasNext()){
+				float[] us = users.next();
+				Cluster BMU = findBMU(us);///Step 3
+				ArrayList<Cluster> neighbors = findNeighbors(BMU, r);///Step 4
+				updateNeighbors(neighbors, us, eta);///Step 5
+			}
+		}
+		
 		return true;
 	}
 	
