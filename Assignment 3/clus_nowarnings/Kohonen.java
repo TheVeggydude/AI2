@@ -141,7 +141,6 @@ public class Kohonen extends ClusteringAlgorithm
 		Iterator<float[]> users = trainData.iterator();
 		
 		for (int e =0; e < epochs; ++e){///Step 2 and 6
-			///Loop done e times
 			float r = (n/2)*(1-(e/epochs)); ///Calculate r every loop as e changes, within the loop would be inefficient
 			float eta = 0.8f*(1-(e/epochs)); ///Same for eta.
 			while (users.hasNext()){
