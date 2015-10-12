@@ -141,7 +141,7 @@ public class Kohonen extends ClusteringAlgorithm
 	{
 		// Step 1: initialize map with random vectors (A good place to do this, is in the initialisation of the clusters) -- DONE
 		// Repeat 'epochs' times:
-			// Step 2: Calculate the squareSize and the learningRate, these decrease lineary with the number of epochs.
+			// Step 2: Calculate the squareSize and the learningRate, these decrease linearly with the number of epochs.
 			// Step 3: Every input vector is presented to the map (always in the same order)
 			// For each vector its Best Matching Unit is found, and :
 				// Step 4: All nodes within the neighbourhood of the BMU are changed, you don't have to use distance relative learning.
@@ -150,14 +150,17 @@ public class Kohonen extends ClusteringAlgorithm
 		Iterator<float[]> users = trainData.iterator();
 		
 		for (int e =0; e < epochs; ++e){///Step 2 and 6
+			
 			float r = (n/2)*(1-((float) e/epochs)); ///Calculate r every loop as e changes, within the loop would be inefficient
 			float eta = 0.8f*(1-((float) e/epochs)); ///Same for eta.
+			
 			while (users.hasNext()){
 				float[] us = users.next();
 				Coordinate BMU = findBMU(us);///Step 3
 				ArrayList<Cluster> neighbors = findNeighbors(BMU, r);///Step 4
 				updateNeighbors(neighbors, us, eta);///Step 5
 			}
+			
 			System.out.println("Epoch: " + e + " | r = " + r + " | eta = " + eta);
 		}
 		
@@ -169,11 +172,43 @@ public class Kohonen extends ClusteringAlgorithm
 		// iterate along all clients
 		// for each client find the cluster of which it is a member
 		// get the actual testData (the vector) of this client
-		// iterate along all dimensions
-		// and count prefetched htmls
-		// count number of hits
-		// count number of requests
+		
+		Iterator<float[]> clients = testData.iterator();
+		int prefetched = 0;
+		int hits = 0;
+		int requests = 0;
+		
+		
+		while(clients.hasNext()){
+			
+			float[] currentClient = clients.next();
+			
+			Coordinate c = findBMU(currentClient);
+			float[] prototype = this.clusters[c.x][c.y].prototype;
+			
+			// iterate along all dimensions
+			for(int url = 0; url < this.dim; url++){
+				
+				// and count prefetched htmls
+				prefetched = prototype[url] >= this.prefetchThreshold ? prefetched+1 : prefetched ; 
+				
+				// count number of hits
+				hits = (prototype[url] >= this.prefetchThreshold) && (currentClient[url] == 1.0) ? hits+1 : hits ;
+
+				// count number of requests
+				requests = currentClient[url] == 1.0 ? requests+1 : requests ;
+				
+			}
+			
+		}
+		
+
 		// set the global variables hitrate and accuracy to their appropriate value
+		
+		System.out.println("Hits: " + hits + ", requests: " + requests +", prefetched: " + prefetched);
+		this.hitrate = hits/(double)requests;
+		this.accuracy = hits/(double)prefetched;
+				
 		return true;
 	}
 

@@ -244,9 +244,6 @@ public class KMeans extends ClusteringAlgorithm
 		}
 		
 		// set the global variables hitrate and accuracy to their appropriate value
-		
-		System.out.println("Hits: " + hits + ", requests: " + requests +", prefetched: " + prefetched);
-		
 		this.hitrate = hits/(double)requests;
 		this.accuracy = hits/(double)prefetched;
 		
