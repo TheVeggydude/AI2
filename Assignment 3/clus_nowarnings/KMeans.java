@@ -70,7 +70,7 @@ public class KMeans extends ClusteringAlgorithm
 		System.out.println("RandomPartition");
 		this.randomPartition(); ///step 1
 		
-		while(!this.sameProtypes()){ /// step 4
+		while(!this.sameMembers()){ /// step 4
 			System.out.println("Partition");
 			this.partition(); ///step 2
 			
@@ -82,7 +82,7 @@ public class KMeans extends ClusteringAlgorithm
 		return false;
 	}
 
-	private boolean sameProtypes() {
+	private boolean sameMembers() {
 		///Check if the current and previous members of all the clusters are the same.
 		
 		///For each of the clusters
