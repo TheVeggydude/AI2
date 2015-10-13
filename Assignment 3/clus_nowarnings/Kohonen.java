@@ -67,7 +67,7 @@ public class Kohonen extends ClusteringAlgorithm
 		
 		Random rnd = new Random();
 
-		// Here n*n new cluster are initialized
+		//Step 1: Here n*n new cluster are initialized
 		clusters = new Cluster[n][n];
 		for (int i = 0; i < n; i++)  {
 			for (int i2 = 0; i2 < n; i2++) {
@@ -147,13 +147,14 @@ public class Kohonen extends ClusteringAlgorithm
 				// Step 4: All nodes within the neighbourhood of the BMU are changed, you don't have to use distance relative learning.
 		// Since training kohonen maps can take quite a while, presenting the user with a progress bar would be nice
 		
-		Iterator<float[]> users = trainData.iterator();
+		Iterator<float[]> users;
 		
 		for (int e =0; e < epochs; ++e){///Step 2 and 6
 			
 			float r = (n/2)*(1-((float) e/epochs)); ///Calculate r every loop as e changes, within the loop would be inefficient
 			float eta = 0.8f*(1-((float) e/epochs)); ///Same for eta.
 			
+			users = trainData.iterator();//(re-)initialize the iterator
 			while (users.hasNext()){
 				float[] us = users.next();
 				Coordinate BMU = findBMU(us);///Step 3
@@ -162,6 +163,14 @@ public class Kohonen extends ClusteringAlgorithm
 			}
 			
 			System.out.println("Epoch: " + e + " | r = " + r + " | eta = " + eta);
+		}
+		
+		///Now that prototypes are trained, add each user to a cluster.
+		users = trainData.iterator();
+		while (users.hasNext()){
+			float[] us = users.next();
+			Coordinate BMU = findBMU(us);
+			clusters[BMU.x][BMU.y].currentMembers.add(trainData.indexOf(us));
 		}
 		
 		return true;
@@ -187,17 +196,24 @@ public class Kohonen extends ClusteringAlgorithm
 			float[] prototype = this.clusters[c.x][c.y].prototype;
 			
 			// iterate along all dimensions
-			for(int url = 0; url < this.dim; url++){
-				
-				// and count prefetched htmls
-				prefetched = prototype[url] >= this.prefetchThreshold ? prefetched+1 : prefetched ; 
-				
-				// count number of hits
-				hits = (prototype[url] >= this.prefetchThreshold) && (currentClient[url] == 1.0) ? hits+1 : hits ;
+			for (int x = 0; x < n; ++x){
+				for (int y = 0; y < n; ++y){
+					if (clusters[x][y].currentMembers.contains(testData.indexOf(currentClient))){
+						///Found matching cluster.
+						for(int url = 0; url < this.dim; url++){
+							
+							// and count prefetched htmls
+							prefetched = prototype[url] >= this.prefetchThreshold ? prefetched+1 : prefetched ; 
+							
+							// count number of hits
+							hits = (prototype[url] >= this.prefetchThreshold) && (currentClient[url] == 1.0) ? hits+1 : hits ;
 
-				// count number of requests
-				requests = currentClient[url] == 1.0 ? requests+1 : requests ;
-				
+							// count number of requests
+							requests = currentClient[url] == 1.0 ? requests+1 : requests ;
+							
+						}
+					}
+				}
 			}
 			
 		}
