@@ -46,9 +46,33 @@ class Map :
         ### 2. repeat value iteration loop until largest change is smaller than
         ###    stop criterion
         
-        pass #placeholder, delete when implementing
+        for x in range(self.n_cols) :
+            for y in range(self.n_rows) :
+                if not self.states[(x,y)].isGoal :
+                    self.states[(x,y)].utility = 0.0 #Isn't this obsolete? Look at the definition of State!
         
         
+        greatestChange = sys.maxint
+        stopCrit = 42
+        while (greatestChange > stopCrit) :
+            for x in range(self.n_cols) :
+                for y in range(self.n_rows) :
+                    if not self.states[(x,y)].isGoal :
+                        oldU = self.states[(x,y)].utility
+                        
+                        
+    def calculateUtility(self, coor) :
+        s = self.states[coor]
+        #create list of next possible locations
+        successors = [problem_utils.getSuccessor(coor,A) for A in s.actions if self.isLegalMove(problem_utils.getSuccessor(coor,A))]#TODO: prevent backtracking?
+        utilities = [self.calculateUtility(suc) for suc in successors]
+        transitionProbs = np.repeat(1,len(successors))#TODO
+        return s.reward + (self.gamma*max([transitionProbs[idx]*utilities[idx] for idx in range(len(successors))))
+        
+    def isLegalMove(self, coor) :   #return whether a coordinate is passable.
+        x = coor[0]                 #tested: OK
+        y = coor[1]
+        return x >= 0 and x < self.n_cols and y >= 0 and y < self.n_rows and not self.states[(x,y)].isWall
 
     ### you write this method
     def policyIteration(self) :
@@ -119,7 +143,7 @@ class Map :
             for c in range(self.n_cols) :
                 to_print = to_print + "--------:"
             to_print = to_print + '\n'
-        print to_print
+        print(to_print)
 
 def makeRNProblem() :
     """

@@ -28,7 +28,7 @@ def right(action) :
     if action == 'down' :
         return 'left' 
 
-def getSuccessor(s, action) :
+def getSuccessor(s, action) : #s = old coordinates
     
     if action == 'up' :
         return (s[0], s[1]-1)
@@ -36,5 +36,5 @@ def getSuccessor(s, action) :
         return (s[0], s[1]+1)
     elif action == 'left' :
         return (s[0]-1, s[1])
-    else :
+    else : #right
         return (s[0]+1, s[1])
